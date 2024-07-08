@@ -49,6 +49,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
       bio: user.bio || "",
     },
   });
+
   const handleImage = (
     e: React.ChangeEvent<HTMLInputElement>,
     fieldChange: (value: string) => void
