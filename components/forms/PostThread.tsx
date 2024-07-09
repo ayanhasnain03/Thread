@@ -39,20 +39,14 @@ function PostThread({ userId }: Props) {
   });
 
   const onSubmit = async (values: z.infer<typeof ThreadValidation>) => {
-    try {
-      await createThread({
-        text: values.thread,
-        author: userId,
-        communityId: organization ? organization.id : null,
-        path: pathname,
-      });
+    await createThread({
+      text: values.thread,
+      author: userId,
+      communityId: organization ? organization.id : null,
+      path: pathname,
+    });
 
-      form.reset(); // Reset form fields on successful submission
-      router.push("/");
-    } catch (error) {
-      console.error("Error posting thread:", error);
-      // Handle error: show message to user or retry logic
-    }
+    router.push("/");
   };
 
   return (
