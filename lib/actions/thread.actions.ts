@@ -42,11 +42,11 @@ export async function createThread({
 }
 
 export async function fetchPosts(pageNumber = 1, pageSize = 20) {
-  await connectToDB();
-
-  const skipAmount = (pageNumber - 1) * pageSize;
-
   try {
+    await connectToDB();
+
+    const skipAmount = (pageNumber - 1) * pageSize;
+
     const postsQuery = Thread.find({
       parentId: { $in: [null, undefined] },
     })
