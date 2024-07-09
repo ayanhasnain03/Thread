@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import User from "../models/user.model";
 import { connectToDB } from "../mongoose";
-interface Pramas {
+
+interface Params {
   userId: string;
   username: string;
   name: string;
@@ -11,6 +12,7 @@ interface Pramas {
   image: string;
   path: string;
 }
+
 export async function updateUser({
   userId,
   username,
@@ -18,10 +20,12 @@ export async function updateUser({
   bio,
   image,
   path,
-}: Pramas): Promise<void> {
-  connectToDB();
+}: Params): Promise<void> {
+  await connectToDB();
+
   try {
-    await User.findOneAndUpdate(
+    // Ensure username is stored in lowercase (if that's your requirement)
+    const updatedUser = await User.findOneAndUpdate(
       { id: userId },
       {
         username: username.toLowerCase(),
@@ -31,13 +35,20 @@ export async function updateUser({
         onboarded: true,
       },
       {
-        upsert: true,
+        upsert: true, // Creates a new document if no document matches the query
+        new: true, // Returns the updated document
       }
     );
-    if (path == "/profile/edit") {
+
+    if (!updatedUser) {
+      throw new Error("User not found or could not be updated");
+    }
+
+    if (path === "/profile/edit") {
       revalidatePath(path);
     }
   } catch (error: any) {
+    console.error(`Error updating user: ${error.message}`);
     throw new Error(`Error updating user: ${error.message}`);
   }
 }
@@ -45,13 +56,10 @@ export async function updateUser({
 export async function fetchUser(userId: string) {
   try {
     await connectToDB();
-    return await User.findOne({ id: userId });
-    // .populate({
-    //   path: "communities",
-    //   model: "Community",
-    //   select: "name",
-    // });
+    const user = await User.findOne({ id: userId });
+    return user;
   } catch (error: any) {
+    console.error(`Error fetching user: ${error.message}`);
     throw new Error(`Error fetching user: ${error.message}`);
   }
 }

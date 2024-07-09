@@ -37,14 +37,19 @@ function Comment({ threadId, currentUserImg, currentUserId }: Props) {
   });
 
   const onSubmit = async (values: z.infer<typeof CommentValidation>) => {
-    await addCommentToThread(
-      threadId,
-      values.thread,
-      JSON.parse(currentUserId),
-      pathname
-    );
+    try {
+      await addCommentToThread(
+        threadId,
+        values.thread,
+        JSON.parse(currentUserId),
+        pathname
+      );
 
-    form.reset();
+      form.reset(); // Reset form fields on successful submission
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      // Handle error: show message to user or retry logic
+    }
   };
 
   return (
@@ -54,7 +59,7 @@ function Comment({ threadId, currentUserImg, currentUserId }: Props) {
           control={form.control}
           name="thread"
           render={({ field }) => (
-            <FormItem className="flex w-full items-center gap-3">
+            <FormItem className="flex items-center gap-3">
               <FormLabel>
                 <Image
                   src={currentUserImg}
