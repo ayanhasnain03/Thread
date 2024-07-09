@@ -50,21 +50,6 @@ export async function updateUser({
 export async function fetchUser(userId: string) {
   try {
     await connectToDB();
-    return await User.findOne({ id: userId });
-    // .populate({
-    //   path: "communities",
-    //   model: "Community",
-    //   select: "name",
-    // });
-  } catch (error: any) {
-    console.error(`Error fetching user: ${error.message}`);
-    throw new Error("Failed to fetch user");
-  }
-}
-
-export async function fetchUser(userId: string) {
-  try {
-    await connectToDB();
     const user = await User.findOne({ id: userId });
     return user;
   } catch (error: any) {
