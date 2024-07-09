@@ -12,7 +12,6 @@ interface Params {
   communityId: string | null;
   path: string;
 }
-
 export async function createThread({
   text,
   author,
@@ -22,6 +21,7 @@ export async function createThread({
   await connectToDB();
 
   try {
+    // Create the thread
     const createdThread = await Thread.create({
       text,
       author,
@@ -29,14 +29,14 @@ export async function createThread({
       path,
     });
 
-    // Update user's threads array with the new thread's ID
+    // Update the user model to link the created thread
     await User.findByIdAndUpdate(author, {
       $push: { threads: createdThread._id },
     });
 
+    // Revalidate the path
     revalidatePath(path);
   } catch (error: any) {
-    console.error(`Failed to create thread: ${error.message}`);
     throw new Error(`Failed to create thread: ${error.message}`);
   }
 }
@@ -50,13 +50,12 @@ export async function fetchPosts(pageNumber = 1, pageSize = 20) {
     const postsQuery = Thread.find({
       parentId: { $in: [null, undefined] },
     })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: "desc" })
       .skip(skipAmount)
       .limit(pageSize)
       .populate({
         path: "author",
         model: "User",
-        select: "_id name parentId image",
       })
       .populate({
         path: "children",
@@ -78,7 +77,7 @@ export async function fetchPosts(pageNumber = 1, pageSize = 20) {
     return { posts, isNext };
   } catch (error: any) {
     console.error(`Error fetching posts: ${error.message}`);
-    throw new Error(`Error fetching posts: ${error.message}`);
+    throw new Error("Failed to fetch posts");
   }
 }
 
