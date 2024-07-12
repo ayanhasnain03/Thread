@@ -1,3 +1,4 @@
+import { formatDateString } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -61,8 +62,8 @@ const ThreadCard = ({
             </Link>
             <p className="text-small-regular text-light-2">{content}</p>
 
-            <div className="mt-5 flex  gap-3">
-              <div className="flex  gap-3.5">
+            <div className="mt-5 flex gap-3">
+              <div className="flex gap-3.5">
                 <Image
                   src="/assets/heart-gray.svg"
                   alt="heart"
@@ -71,30 +72,30 @@ const ThreadCard = ({
                   className="cursor-pointer"
                 />
               </div>
-              <div className="flex  gap-3.5">
+              <div className="flex gap-3.5">
                 <Link href={`/thread/${id}`}>
                   <Image
                     src="/assets/reply.svg"
-                    alt="heart"
+                    alt="reply"
                     width={24}
                     height={24}
                     className="cursor-pointer"
                   />
                 </Link>
               </div>
-              <div className="flex  gap-3.5">
+              <div className="flex gap-3.5">
                 <Image
                   src="/assets/repost.svg"
-                  alt="heart"
+                  alt="repost"
                   width={24}
                   height={24}
                   className="cursor-pointer"
                 />
               </div>
-              <div className="flex  gap-3.5">
+              <div className="flex gap-3.5">
                 <Image
                   src="/assets/share.svg"
-                  alt="heart"
+                  alt="share"
                   width={24}
                   height={24}
                   className="cursor-pointer"
@@ -111,8 +112,27 @@ const ThreadCard = ({
             </div>
           </div>
         </div>
+        {isComment && community && (
+          <Link
+            href={`/communities/${community.id}`}
+            className="mt-5 flex items-center "
+          >
+            <p className="text-subtle-medium text-gray-1">
+              {formatDateString(createdAt)} - {community.name} Community
+            </p>
+
+            <Image
+              src={community.image}
+              alt="community_image"
+              width={14}
+              height={14}
+              className="ml-10"
+            />
+          </Link>
+        )}
       </div>
     </article>
   );
 };
+
 export default ThreadCard;

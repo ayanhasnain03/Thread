@@ -1,11 +1,28 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import User from "../models/user.model";
-import { connectToDB } from "../mongoose";
-import Thread from "../models/thread.model";
 import { FilterQuery, SortOrder } from "mongoose";
-interface Pramas {
+import { revalidatePath } from "next/cache";
+
+import Community from "../models/community.model";
+import Thread from "../models/thread.model";
+import User from "../models/user.model";
+
+import { connectToDB } from "../mongoose";
+
+export async function fetchUser(userId: string) {
+  try {
+    connectToDB();
+
+    return await User.findOne({ id: userId }).populate({
+      path: "communities",
+      model: Community,
+    });
+  } catch (error: any) {
+    throw new Error(`Failed to fetch user: ${error.message}`);
+  }
+}
+
+interface Params {
   userId: string;
   username: string;
   name: string;
@@ -13,16 +30,18 @@ interface Pramas {
   image: string;
   path: string;
 }
+
 export async function updateUser({
   userId,
-  username,
-  name,
   bio,
-  image,
+  name,
   path,
-}: Pramas): Promise<void> {
-  connectToDB();
+  username,
+  image,
+}: Params): Promise<void> {
   try {
+    connectToDB();
+
     await User.findOneAndUpdate(
       { id: userId },
       {
@@ -32,57 +51,50 @@ export async function updateUser({
         image,
         onboarded: true,
       },
-      {
-        upsert: true,
-      }
+      { upsert: true }
     );
-    if (path == "/profile/edit") {
+
+    if (path === "/profile/edit") {
       revalidatePath(path);
     }
   } catch (error: any) {
-    throw new Error(`Error updating user: ${error.message}`);
-  }
-}
-
-export async function fetchUser(userId: string) {
-  try {
-    await connectToDB();
-    return await User.findOne({ id: userId });
-    // .populate({
-    //   path: "communities",
-    //   model: "Community",
-    //   select: "name",
-    // });
-  } catch (error: any) {
-    throw new Error(`Error fetching user: ${error.message}`);
+    throw new Error(`Failed to create/update user: ${error.message}`);
   }
 }
 
 export async function fetchUserPosts(userId: string) {
   try {
-    await connectToDB();
+    connectToDB();
 
-    const userThreads = await User.findOne({ id: userId }).populate({
+    // Find all threads authored by the user with the given userId
+    const threads = await User.findOne({ id: userId }).populate({
       path: "threads",
       model: Thread,
-      populate: {
-        path: "children",
-        model: Thread,
-        populate: {
-          path: "author",
-          model: User,
-          select: "name image id",
+      populate: [
+        {
+          path: "community",
+          model: Community,
+          select: "name id image _id", // Select the "name" and "_id" fields from the "Community" model
         },
-      },
+        {
+          path: "children",
+          model: Thread,
+          populate: {
+            path: "author",
+            model: User,
+            select: "name image id", // Select the "name" and "_id" fields from the "User" model
+          },
+        },
+      ],
     });
-
-    return userThreads;
-  } catch (error: any) {
-    console.error(`Error fetching user posts: ${error.message}`);
-    return null;
+    return threads;
+  } catch (error) {
+    console.error("Error fetching user threads:", error);
+    throw error;
   }
 }
 
+// Almost similar to Thead (search + pagination) and Community (search + pagination)
 export async function fetchUsers({
   userId,
   searchString = "",
@@ -91,39 +103,53 @@ export async function fetchUsers({
   sortBy = "desc",
 }: {
   userId: string;
-  searchString: string;
+  searchString?: string;
   pageNumber?: number;
   pageSize?: number;
   sortBy?: SortOrder;
 }) {
   try {
-    await connectToDB();
+    connectToDB();
+
+    // Calculate the number of users to skip based on the page number and page size.
     const skipAmount = (pageNumber - 1) * pageSize;
+
+    // Create a case-insensitive regular expression for the provided search string.
     const regex = new RegExp(searchString, "i");
+
+    // Create an initial query object to filter users.
     const query: FilterQuery<typeof User> = {
-      id: {
-        $ne: userId,
-      },
+      id: { $ne: userId }, // Exclude the current user from the results.
     };
+
+    // If the search string is not empty, add the $or operator to match either username or name fields.
     if (searchString.trim() !== "") {
       query.$or = [
         { username: { $regex: regex } },
         { name: { $regex: regex } },
       ];
     }
-    const sortOption = {
-      createdAt: sortBy,
-    };
-    const userQuery = User.find(query)
-      .sort(sortOption)
+
+    // Define the sort options for the fetched users based on createdAt field and provided sort order.
+    const sortOptions = { createdAt: sortBy };
+
+    const usersQuery = User.find(query)
+      .sort(sortOptions)
       .skip(skipAmount)
       .limit(pageSize);
+
+    // Count the total number of users that match the search criteria (without pagination).
     const totalUsersCount = await User.countDocuments(query);
-    const users = await userQuery.exec();
+
+    const users = await usersQuery.exec();
+
+    // Check if there are more users beyond the current page.
     const isNext = totalUsersCount > skipAmount + users.length;
+
     return { users, isNext };
-  } catch (error: any) {
-    console.log(`Error fetching users: ${error.message}`);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
   }
 }
 

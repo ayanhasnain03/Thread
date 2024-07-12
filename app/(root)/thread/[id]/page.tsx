@@ -20,6 +20,7 @@ async function page({ params }: { params: { id: string } }) {
 
   const thread = await fetchThreadById(params.id);
 
+  console.log(thread);
   return (
     <section className="relative">
       <div>

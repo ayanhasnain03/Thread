@@ -4,6 +4,7 @@ import Thread from "../models/thread.model";
 import User from "../models/user.model";
 import { revalidatePath } from "next/cache";
 import path from "path";
+import Community from "../models/community.model";
 
 interface Params {
   text: string;
@@ -18,23 +19,32 @@ export async function createThread({
   communityId,
   path,
 }: Params) {
-  await connectToDB();
-
   try {
-    // Create the thread
+    connectToDB();
+
+    const communityIdObject = await Community.findOne(
+      { id: communityId },
+      { _id: 1 }
+    );
+
     const createdThread = await Thread.create({
       text,
       author,
-      communityId,
-      path,
+      community: communityIdObject, // Assign communityId if provided, or leave it null for personal account
     });
 
-    // Update the user model to link the created thread
+    // Update User model
     await User.findByIdAndUpdate(author, {
       $push: { threads: createdThread._id },
     });
 
-    // Revalidate the path
+    if (communityIdObject) {
+      // Update Community model
+      await Community.findByIdAndUpdate(communityIdObject, {
+        $push: { threads: createdThread._id },
+      });
+    }
+
     revalidatePath(path);
   } catch (error: any) {
     throw new Error(`Failed to create thread: ${error.message}`);
