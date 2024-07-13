@@ -28,8 +28,6 @@ interface Props {
 
 const ThreadCard = ({
   id,
-  currentUserId,
-  parentId,
   content,
   author,
   community,
@@ -64,13 +62,7 @@ const ThreadCard = ({
 
             <div className="mt-5 flex gap-3">
               <div className="flex gap-3.5">
-                <Image
-                  src="/assets/heart-gray.svg"
-                  alt="heart"
-                  width={24}
-                  height={24}
-                  className="cursor-pointer"
-                />
+                <LikeThread userId={author._id} threadId={id} />
               </div>
               <div className="flex gap-3.5">
                 <Link href={`/thread/${id}`}>

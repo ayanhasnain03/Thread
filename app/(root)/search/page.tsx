@@ -4,7 +4,7 @@ import UserCard from "@/components/cards/UserCard";
 
 import { fetchUser, fetchUsers } from "@/lib/actions/user.actions";
 import { currentUser } from "@clerk/nextjs/server";
-import Searchbar from "@/components/forms/SeaerchForm";
+import Searchbar from "@/components/forms/Search";
 
 async function Page({
   searchParams,
