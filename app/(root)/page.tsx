@@ -13,7 +13,7 @@ async function Home() {
   if (!userInfo?.onboarded) redirect("/onboarding");
 
   const result = await fetchPosts(1, 30);
-  console.log(fetchPosts);
+
   return (
     <>
       <h1 className="head-text text-left">Home</h1>

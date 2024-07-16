@@ -62,7 +62,7 @@ const ThreadCard = ({
 
             <div className="mt-5 flex gap-3">
               <div className="flex gap-3.5">
-                <LikeThread userId={author._id} threadId={id} />
+                {/* <LikeThread userId={author._id} threadId={id} /> */}
               </div>
               <div className="flex gap-3.5">
                 <Link href={`/thread/${id}`}>
