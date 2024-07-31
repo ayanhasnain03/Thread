@@ -63,7 +63,7 @@ const ThreadCard = ({
             <div className="mt-5 flex gap-3">
               <div className="flex gap-3.5">
                 <Image
-                  src="/assets/hert.svg"
+                  src="/assets/heart-gray.svg"
                   alt="like"
                   width={24}
                   height={24}
